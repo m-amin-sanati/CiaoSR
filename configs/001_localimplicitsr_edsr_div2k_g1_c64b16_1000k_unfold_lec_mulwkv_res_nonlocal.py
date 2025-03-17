@@ -1,7 +1,7 @@
 exp_name = '001_ciaosr_edsr_div2k'
 scale_min, scale_max = 1, 4
 val_scale = 4
-data_type = 'Urban100'  #TODO {Set5, Set14, BSDS100, Urban100, Manga109}
+data_type = '' 
 
 from mmedited.models.restorers.ciaosr import CiaoSR
 from mmedited.models.backbones.sr_backbones.ciaosr_net import LocalImplicitSREDSR
@@ -42,9 +42,9 @@ model = dict(
 # model training and testing settings
 train_cfg = None
 if val_scale <= 4:
-    test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=val_scale, scale=val_scale, tile=192, tile_overlap=32, convert_to='y') # larger tile is better
+    test_cfg = dict(metrics=None, crop_border=val_scale, scale=val_scale, tile=192, tile_overlap=32, convert_to='y') # larger tile is better
 else:
-    test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=val_scale, scale=val_scale, convert_to='y') # x6, x8, x12 
+    test_cfg = dict(metrics=None, crop_border=val_scale, scale=val_scale, convert_to='y') # x6, x8, x12 
 
 
 # dataset settings
@@ -97,27 +97,21 @@ test_pipeline = [
     dict(
         type='LoadImageFromFile',
         io_backend='disk',
-        key='gt',
-        flag='color',
-        channel_order='rgb'),
-    dict(
-        type='LoadImageFromFile',
-        io_backend='disk',
         key='lq',
         flag='color',
         channel_order='rgb'),
-    dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='RescaleToZeroOne', keys=['lq']),
+    dict(type='ImageToTensor', keys=['lq']),
     dict(type='GenerateCoordinateAndCell', scale=val_scale),
     dict(
         type='Collect',
-        keys=['lq', 'gt', 'coord', 'cell'],
-        meta_keys=['gt_path'])
+        keys=['lq', 'coord', 'cell'],
+        meta_keys=['lq_path'])
 ]
 
 data_dir = "data"
-lq_path = f'{data_dir}/Classical/' + data_type + '/LRbicx'+str(val_scale)
-gt_path = f'{data_dir}/Classical/' + data_type + '/GTmod12'
+lq_path = f'{data_dir}' + '/LR'
+gt_path = f'{data_dir}' + '/HR'
 
 data = dict(
     workers_per_gpu=8,
@@ -147,7 +141,7 @@ data = dict(
                  gt_folder=gt_path, 
                  pipeline=valid_pipeline, 
                  scale=val_scale)
-
+)
 # optimizer
 optimizers = dict(type='Adam', lr=1.e-4)
 
